@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/Og7iRJ-r)
 # Mock, Stub o Spy en Kotlin
 
 Antes de empezar, recuerda que el objetivo es realizar la práctica aqui enlazada:
@@ -410,6 +411,11 @@ Identifica **al menos 3 casos de prueba de tu batería** y explica:
 
 Incluye enlaces a los tests correspondientes.
 
+He implementado varios casos de prueba, entre ellos los siguientes:
+- Cantidad negativa: [test](https://github.com/IES-Rafael-Alberti/2526-u5-5-3-exchangeservice-AntonioJMora/blob/fcd6b503106842cf470603f12e2519f586dbbd1a/src/test/kotlin/ExchangeServiceDesignedBatteryTest.kt#L36-L40). Compruebo que el método lance un `IllegalArgumentException` cuando le pasamos un valor negativo. Es importante porque es un caso límite básico y valida que el servicio no procese datos erróneos.
+- Origen y destino iguales: [test](https://github.com/IES-Rafael-Alberti/2526-u5-5-3-exchangeservice-AntonioJMora/blob/fcd6b503106842cf470603f12e2519f586dbbd1a/src/test/kotlin/ExchangeServiceDesignedBatteryTest.kt#L54-L63). Valido que si se pide cambiar, por ejemplo, USD a USD, se devuelva la misma cantidad sin llegar a llamar al proveedor de tasas.
+- Conversión cruzada: [test](https://github.com/IES-Rafael-Alberti/2526-u5-5-3-exchangeservice-AntonioJMora/blob/fcd6b503106842cf470603f12e2519f586dbbd1a/src/test/kotlin/ExchangeServiceDesignedBatteryTest.kt#L90-L108). Este caso comprueba el fallback. Si no hay tasa directa para GBP->USD, el test verifica que el servicio intenta y calcula bien la ruta GBP -> EUR -> USD. Es clave porque prueba la lógica principal de la aplicación cuando no hay ruta directa.
+
 
 #### 🔹 2) CE f) Se han efectuado pruebas unitarias de clases y funciones
 
@@ -424,6 +430,14 @@ Selecciona uno de tus tests y explica cómo se trata de una **prueba unitaria re
 Justifica por qué este test cumple con el concepto de prueba unitaria según el módulo 
 
 Incluye enlace al test.
+
+El test que ilustra mejor una prueba unitaria real es el de la tasa directa usando stub [test](https://github.com/IES-Rafael-Alberti/2526-u5-5-3-exchangeservice-AntonioJMora/blob/fcd6b503106842cf470603f12e2519f586dbbd1a/src/test/kotlin/ExchangeServiceDesignedBatteryTest.kt#L65-L74):
+
+Método probado: ExchangeService.exchange(Money, String). Es la única unidad bajo test.
+Aislamiento: Se crea un mockk<ExchangeRateProvider>() y se configura con every { provider.rate("USDEUR") } returns 0.90. De este modo, ExchangeService no depende de ninguna implementación real ni de red ni de base de datos; la única lógica que se ejecuta es la interna del servicio.
+Entrada y salida: Se llama a service.exchange(Money(100, "USD"), "EUR") y se verifica que el resultado sea 90. Eso confirma que el servicio aplica correctamente el factor de conversión 100 * 0.90 = 90.
+
+Es una prueba unitaria porque aísla completamente ExchangeService de su dependencia (ExchangeRateProvider) mediante un doble de prueba, ejecuta únicamente el código del servicio, y verifica el resultado con una aserción concreta y determinista.
 
 
 #### 🔹 3) CE g) Se han implementado pruebas automáticas
@@ -440,6 +454,16 @@ Incluye enlace a:
 
 * configuración (build.gradle.kts o similar)
 * ejecución de tests
+
+La batería está implementada con Kotest como framework de testing y MockK como librería de dobles de prueba. La ejecución se gestiona a través de Gradle, que es la herramienta de build del proyecto.
+Para lanzar todos los tests sin intervención manual basta con ejecutar desde la raíz del proyecto:
+```bash
+./gradlew test
+```
+Gradle detecta automáticamente todas las clases que extienden de DescribeSpec (o cualquier otro estilo de Kotest) y las ejecuta. No es necesario indicar ningún test concreto.
+La evidencia de verificación automática está en las propias aserciones de Kotest: cada shouldBe, shouldThrow o verify lanza una excepción si la condición no se cumple, lo que provoca que Gradle marque el test como fallido y detenga el build si está configurado para ello. El informe de resultados se genera en build/reports/tests/test/index.html.
+- Configuración: [build.gradle.kts](build.gradle.kts)
+- Test: [src/test/kotlin/ExchangeServiceDesignedBatteryTest.kt](src/test/kotlin/ExchangeServiceDesignedBatteryTest.kt)
 
 
 #### 🔹 4) CE h) Se han documentado las incidencias detectadas
